@@ -1,0 +1,493 @@
+{
+  "info": {
+    "name": "Health Board API",
+    "description": "Collection completa para testar a Health Board API. Importe este arquivo no Postman e configure a variável `token` com seu Bearer token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://health-board-api.test/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "1|tJip3m4VnJfkBmKNP6kmoeIy3NEk4XM7dluAfUcqa6b92bfb",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Repositories",
+      "item": [
+        {
+          "name": "Listar todos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/repositories",
+              "host": ["{{base_url}}"],
+              "path": ["repositories"]
+            }
+          }
+        },
+        {
+          "name": "Detalhar repositório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/repositories/1",
+              "host": ["{{base_url}}"],
+              "path": ["repositories", "1"]
+            }
+          }
+        },
+        {
+          "name": "Criar repositório",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"api-gateway\",\n  \"full_name\": \"seu-usuario/api-gateway\",\n  \"github_url\": \"https://github.com/seu-usuario/api-gateway\",\n  \"access_token\": \"ghp_seu_token_opcional\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/repositories",
+              "host": ["{{base_url}}"],
+              "path": ["repositories"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar repositório",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"api-gateway-v2\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/repositories/1",
+              "host": ["{{base_url}}"],
+              "path": ["repositories", "1"]
+            }
+          }
+        },
+        {
+          "name": "Remover repositório",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/repositories/1",
+              "host": ["{{base_url}}"],
+              "path": ["repositories", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pipelines",
+      "item": [
+        {
+          "name": "Listar todos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pipelines",
+              "host": ["{{base_url}}"],
+              "path": ["pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Detalhar pipeline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pipelines/1",
+              "host": ["{{base_url}}"],
+              "path": ["pipelines", "1"]
+            }
+          }
+        },
+        {
+          "name": "Pipelines de um repositório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/repositories/1/pipelines",
+              "host": ["{{base_url}}"],
+              "path": ["repositories", "1", "pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Registrar pipeline (success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository_id\": 1,\n  \"workflow_name\": \"CI Pipeline\",\n  \"status\": \"success\",\n  \"branch\": \"main\",\n  \"duration\": 95,\n  \"run_at\": \"2026-05-06 20:00:00\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/pipelines",
+              "host": ["{{base_url}}"],
+              "path": ["pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Registrar pipeline (failure)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository_id\": 1,\n  \"workflow_name\": \"CI Pipeline\",\n  \"status\": \"failure\",\n  \"branch\": \"feature/nova-rota\",\n  \"duration\": 32,\n  \"run_at\": \"2026-05-06 21:00:00\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/pipelines",
+              "host": ["{{base_url}}"],
+              "path": ["pipelines"]
+            }
+          }
+        },
+        {
+          "name": "Remover pipeline",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pipelines/1",
+              "host": ["{{base_url}}"],
+              "path": ["pipelines", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Releases",
+      "item": [
+        {
+          "name": "Listar todas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/releases",
+              "host": ["{{base_url}}"],
+              "path": ["releases"]
+            }
+          }
+        },
+        {
+          "name": "Detalhar release",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/releases/1",
+              "host": ["{{base_url}}"],
+              "path": ["releases", "1"]
+            }
+          }
+        },
+        {
+          "name": "Releases de um repositório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/repositories/1/releases",
+              "host": ["{{base_url}}"],
+              "path": ["repositories", "1", "releases"]
+            }
+          }
+        },
+        {
+          "name": "Registrar release",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository_id\": 1,\n  \"version\": \"v1.2.0\",\n  \"environment\": \"production\",\n  \"deployed_at\": \"2026-05-06 22:00:00\",\n  \"changelog\": \"- Adicao de autenticacao\\n- Correcao de bug no endpoint de usuarios\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/releases",
+              "host": ["{{base_url}}"],
+              "path": ["releases"]
+            }
+          }
+        },
+        {
+          "name": "Remover release",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/releases/1",
+              "host": ["{{base_url}}"],
+              "path": ["releases", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incidents",
+      "item": [
+        {
+          "name": "Listar todos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents",
+              "host": ["{{base_url}}"],
+              "path": ["incidents"]
+            }
+          }
+        },
+        {
+          "name": "Listar apenas abertos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents/open",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "open"]
+            }
+          }
+        },
+        {
+          "name": "Detalhar incidente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents/1",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "1"]
+            }
+          }
+        },
+        {
+          "name": "Abrir incidente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository_id\": 1,\n  \"title\": \"Latencia alta no endpoint /users\",\n  \"description\": \"P95 acima de 2s desde as 18h. Possivel causa: query sem indice.\",\n  \"severity\": \"high\",\n  \"status\": \"open\",\n  \"opened_at\": \"2026-05-06 18:00:00\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents",
+              "host": ["{{base_url}}"],
+              "path": ["incidents"]
+            }
+          }
+        },
+        {
+          "name": "Mover para investigando",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"investigating\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/1",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "1"]
+            }
+          }
+        },
+        {
+          "name": "Resolver incidente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/1",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "1"]
+            }
+          }
+        },
+        {
+          "name": "Remover incidente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents/1",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Score",
+      "item": [
+        {
+          "name": "Score de um repositório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health-score/1",
+              "host": ["{{base_url}}"],
+              "path": ["health-score", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "GitHub — workflow_run (success)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-GitHub-Event", "value": "workflow_run" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository\": {\n    \"full_name\": \"seu-usuario/api-gateway\"\n  },\n  \"workflow_run\": {\n    \"name\": \"CI Pipeline\",\n    \"status\": \"completed\",\n    \"conclusion\": \"success\",\n    \"head_branch\": \"main\",\n    \"run_started_at\": \"2026-05-06T20:00:00Z\",\n    \"updated_at\": \"2026-05-06T20:01:35Z\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://health-board-api.test/api/webhooks/github",
+              "protocol": "https",
+              "host": ["health-board-api", "test"],
+              "path": ["api", "webhooks", "github"]
+            }
+          }
+        },
+        {
+          "name": "GitHub — workflow_run (failure)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-GitHub-Event", "value": "workflow_run" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository\": {\n    \"full_name\": \"seu-usuario/api-gateway\"\n  },\n  \"workflow_run\": {\n    \"name\": \"CI Pipeline\",\n    \"status\": \"completed\",\n    \"conclusion\": \"failure\",\n    \"head_branch\": \"feature/nova-rota\",\n    \"run_started_at\": \"2026-05-06T21:00:00Z\",\n    \"updated_at\": \"2026-05-06T21:00:32Z\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://health-board-api.test/api/webhooks/github",
+              "protocol": "https",
+              "host": ["health-board-api", "test"],
+              "path": ["api", "webhooks", "github"]
+            }
+          }
+        },
+        {
+          "name": "GitHub — release",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-GitHub-Event", "value": "release" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository\": {\n    \"full_name\": \"seu-usuario/api-gateway\"\n  },\n  \"release\": {\n    \"tag_name\": \"v1.3.0\",\n    \"published_at\": \"2026-05-06T22:00:00Z\",\n    \"body\": \"- Correcao de bug critico\\n- Melhoria de performance\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://health-board-api.test/api/webhooks/github",
+              "protocol": "https",
+              "host": ["health-board-api", "test"],
+              "path": ["api", "webhooks", "github"]
+            }
+          }
+        },
+        {
+          "name": "GitHub — repositório não monitorado",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-GitHub-Event", "value": "workflow_run" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repository\": {\n    \"full_name\": \"outro/repo-nao-cadastrado\"\n  },\n  \"workflow_run\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://health-board-api.test/api/webhooks/github",
+              "protocol": "https",
+              "host": ["health-board-api", "test"],
+              "path": ["api", "webhooks", "github"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
