@@ -40,5 +40,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/incidents/{incident}', [IncidentController::class, 'destroy']);
 
     // Health Score
+    Route::get('/health-scores', [HealthScoreController::class, 'index']);
     Route::get('/health-score/{repository}', [HealthScoreController::class, 'show']);
 });

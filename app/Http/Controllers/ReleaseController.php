@@ -11,7 +11,7 @@ class ReleaseController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Release::with('repository')->latest('deployed_at')->get());
+        return response()->json(Release::with('repository')->latest('deployed_at')->paginate(20));
     }
 
     public function show(Release $release): JsonResponse

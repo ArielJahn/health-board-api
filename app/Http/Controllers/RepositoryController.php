@@ -10,7 +10,7 @@ class RepositoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Repository::all());
+        return response()->json(Repository::paginate(20));
     }
 
     public function show(Repository $repository): JsonResponse

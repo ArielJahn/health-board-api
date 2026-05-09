@@ -11,7 +11,7 @@ class PipelineController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Pipeline::with('repository')->latest('run_at')->get());
+        return response()->json(Pipeline::with('repository')->latest('run_at')->paginate(20));
     }
 
     public function show(Pipeline $pipeline): JsonResponse

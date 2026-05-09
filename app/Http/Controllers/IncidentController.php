@@ -10,7 +10,7 @@ class IncidentController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Incident::with('repository')->latest('opened_at')->get());
+        return response()->json(Incident::with('repository')->latest('opened_at')->paginate(20));
     }
 
     public function show(Incident $incident): JsonResponse

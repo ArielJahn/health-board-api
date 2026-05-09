@@ -7,13 +7,16 @@ use App\Models\Release;
 use App\Models\Repository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
     public function github(Request $request): JsonResponse
     {
-        $event = $request->header('X-GitHub-Event');
+        if (! $this->signatureIsValid($request)) {
+            return response()->json(['error' => 'Assinatura inválida'], 401);
+        }
+
+        $event   = $request->header('X-GitHub-Event');
         $payload = $request->json()->all();
 
         $repoFullName = $payload['repository']['full_name'] ?? null;
@@ -29,10 +32,56 @@ class WebhookController extends Controller
         }
 
         return match ($event) {
+            'push'         => $this->handlePush($repository, $payload),
             'workflow_run' => $this->handleWorkflowRun($repository, $payload),
             'release'      => $this->handleRelease($repository, $payload),
             default        => response()->json(['message' => "Evento '{$event}' ignorado"], 200),
         };
+    }
+
+    private function signatureIsValid(Request $request): bool
+    {
+        $secret = config('services.github.webhook_secret');
+
+        // Se não houver secret configurado, ignora verificação (ambiente local sem secret)
+        if (empty($secret)) {
+            return true;
+        }
+
+        $signature = $request->header('X-Hub-Signature-256');
+
+        if (! $signature) {
+            return false;
+        }
+
+        $expected = 'sha256=' . hash_hmac('sha256', $request->getContent(), $secret);
+
+        return hash_equals($expected, $signature);
+    }
+
+    private function handlePush(Repository $repository, array $payload): JsonResponse
+    {
+        $branch = str_replace('refs/heads/', '', $payload['ref'] ?? '');
+
+        // Registra push apenas em branches principais
+        if (! in_array($branch, ['main', 'master', 'develop'])) {
+            return response()->json(['message' => "Push em '{$branch}' ignorado"], 200);
+        }
+
+        $pipeline = Pipeline::create([
+            'repository_id' => $repository->id,
+            'workflow_name' => 'push',
+            'status'        => 'in_progress',
+            'branch'        => $branch,
+            'duration'      => null,
+            'run_at'        => now(),
+        ]);
+
+        return response()->json([
+            'message'     => 'Push registrado',
+            'pipeline_id' => $pipeline->id,
+            'branch'      => $branch,
+        ], 201);
     }
 
     private function handleWorkflowRun(Repository $repository, array $payload): JsonResponse
@@ -47,10 +96,10 @@ class WebhookController extends Controller
         };
 
         $duration = null;
-        if ($run['run_started_at'] && $run['updated_at']) {
+        if (! empty($run['run_started_at']) && ! empty($run['updated_at'])) {
             $start    = new \DateTime($run['run_started_at']);
             $end      = new \DateTime($run['updated_at']);
-            $duration = $end->getTimestamp() - $start->getTimestamp();
+            $duration = max(0, $end->getTimestamp() - $start->getTimestamp());
         }
 
         $pipeline = Pipeline::create([
@@ -62,7 +111,11 @@ class WebhookController extends Controller
             'run_at'        => $run['run_started_at'],
         ]);
 
-        return response()->json(['message' => 'Pipeline registrado', 'pipeline_id' => $pipeline->id], 201);
+        return response()->json([
+            'message'     => 'Pipeline registrado',
+            'pipeline_id' => $pipeline->id,
+            'status'      => $status,
+        ], 201);
     }
 
     private function handleRelease(Repository $repository, array $payload): JsonResponse
@@ -77,6 +130,10 @@ class WebhookController extends Controller
             'changelog'     => $rel['body'] ?? null,
         ]);
 
-        return response()->json(['message' => 'Release registrada', 'release_id' => $release->id], 201);
+        return response()->json([
+            'message'    => 'Release registrada',
+            'release_id' => $release->id,
+            'version'    => $rel['tag_name'],
+        ], 201);
     }
 }

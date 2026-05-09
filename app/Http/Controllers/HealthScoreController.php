@@ -7,9 +7,22 @@ use Illuminate\Http\JsonResponse;
 
 class HealthScoreController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        $scores = Repository::with(['pipelines', 'releases', 'incidents'])->get()
+            ->map(fn (Repository $repo) => $this->calculate($repo));
+
+        return response()->json($scores);
+    }
+
     public function show(Repository $repository): JsonResponse
     {
-        $score = 0;
+        return response()->json($this->calculate($repository));
+    }
+
+    private function calculate(Repository $repository): array
+    {
+        $score   = 0;
         $details = [];
 
         // CI success rate — últimos 10 runs (50 pontos)
@@ -17,8 +30,8 @@ class HealthScoreController extends Controller
 
         if ($recentPipelines->isNotEmpty()) {
             $successRate = $recentPipelines->where('status', 'success')->count() / $recentPipelines->count();
-            $ciScore = (int) round($successRate * 50);
-            $score += $ciScore;
+            $ciScore     = (int) round($successRate * 50);
+            $score      += $ciScore;
             $details['ci'] = [
                 'score'        => $ciScore,
                 'max'          => 50,
@@ -33,7 +46,7 @@ class HealthScoreController extends Controller
         $lastRelease = $repository->releases()->latest('deployed_at')->first();
 
         if ($lastRelease && $lastRelease->deployed_at->diffInDays(now()) <= 7) {
-            $score += 30;
+            $score        += 30;
             $details['deploy'] = [
                 'score'       => 30,
                 'max'         => 30,
@@ -51,20 +64,20 @@ class HealthScoreController extends Controller
         $openIncidents = $repository->incidents()->where('status', '!=', 'resolved')->count();
 
         if ($openIncidents === 0) {
-            $score += 20;
+            $score        += 20;
             $details['incidents'] = ['score' => 20, 'max' => 20, 'open' => 0];
         } else {
             $details['incidents'] = ['score' => 0, 'max' => 20, 'open' => $openIncidents];
         }
 
-        return response()->json([
+        return [
             'repository_id' => $repository->id,
             'repository'    => $repository->full_name,
             'score'         => $score,
             'max_score'     => 100,
             'status'        => $this->statusLabel($score),
             'details'       => $details,
-        ]);
+        ];
     }
 
     private function statusLabel(int $score): string
