@@ -17,6 +17,13 @@ class Repository extends Model
 
     protected $hidden = ['access_token'];
 
+    protected $appends = ['has_access_token'];
+
+    public function getHasAccessTokenAttribute(): bool
+    {
+        return ! empty($this->attributes['access_token']);
+    }
+
     public function setAccessTokenAttribute(?string $value): void
     {
         $this->attributes['access_token'] = $value ? Crypt::encryptString($value) : null;

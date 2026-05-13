@@ -9,19 +9,41 @@ use Illuminate\Http\Request;
 
 class ReleaseController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Release::with('repository')->latest('deployed_at')->paginate(20));
+        $request->validate([
+            'environment' => 'sometimes|in:dev,staging,production',
+        ]);
+
+        $paginator = Release::with('repository')
+            ->when($request->environment, fn ($q, $v) => $q->where('environment', $v))
+            ->latest('deployed_at')
+            ->paginate(20);
+
+        return $this->paginated($paginator);
     }
 
     public function show(Release $release): JsonResponse
     {
-        return response()->json($release->load('repository'));
+        return $this->ok($release->load('repository'));
     }
 
-    public function byRepository(Repository $repository): JsonResponse
+    public function byRepository(Request $request, Repository $repository): JsonResponse
     {
-        return response()->json($repository->releases()->latest('deployed_at')->get());
+        $request->validate([
+            'limit'       => 'sometimes|integer|min:1|max:100',
+            'environment' => 'sometimes|in:dev,staging,production',
+        ]);
+
+        $limit = (int) $request->query('limit', 20);
+
+        $releases = $repository->releases()
+            ->when($request->environment, fn ($q, $v) => $q->where('environment', $v))
+            ->latest('deployed_at')
+            ->limit($limit)
+            ->get();
+
+        return $this->ok($releases);
     }
 
     public function store(Request $request): JsonResponse
@@ -34,13 +56,13 @@ class ReleaseController extends Controller
             'changelog'     => 'nullable|string',
         ]);
 
-        return response()->json(Release::create($data), 201);
+        return $this->created(Release::create($data));
     }
 
     public function destroy(Release $release): JsonResponse
     {
         $release->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }

@@ -63,19 +63,20 @@ class WebhookController extends Controller
     {
         $branch = str_replace('refs/heads/', '', $payload['ref'] ?? '');
 
-        // Registra push apenas em branches principais
         if (! in_array($branch, ['main', 'master', 'develop'])) {
             return response()->json(['message' => "Push em '{$branch}' ignorado"], 200);
         }
 
-        $pipeline = Pipeline::create([
-            'repository_id' => $repository->id,
-            'workflow_name' => 'push',
-            'status'        => 'in_progress',
-            'branch'        => $branch,
-            'duration'      => null,
-            'run_at'        => now(),
-        ]);
+        // Atualiza o in_progress existente para o mesmo repo+branch em vez de duplicar
+        $pipeline = Pipeline::updateOrCreate(
+            [
+                'repository_id' => $repository->id,
+                'workflow_name' => 'push',
+                'branch'        => $branch,
+                'status'        => 'in_progress',
+            ],
+            ['run_at' => now()]
+        );
 
         return response()->json([
             'message'     => 'Push registrado',

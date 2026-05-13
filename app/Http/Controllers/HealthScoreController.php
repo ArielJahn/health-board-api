@@ -12,12 +12,12 @@ class HealthScoreController extends Controller
         $scores = Repository::with(['pipelines', 'releases', 'incidents'])->get()
             ->map(fn (Repository $repo) => $this->calculate($repo));
 
-        return response()->json($scores);
+        return $this->ok($scores);
     }
 
     public function show(Repository $repository): JsonResponse
     {
-        return response()->json($this->calculate($repository));
+        return $this->ok($this->calculate($repository));
     }
 
     private function calculate(Repository $repository): array
@@ -29,9 +29,9 @@ class HealthScoreController extends Controller
         $recentPipelines = $repository->pipelines()->latest('run_at')->limit(10)->get();
 
         if ($recentPipelines->isNotEmpty()) {
-            $successRate = $recentPipelines->where('status', 'success')->count() / $recentPipelines->count();
-            $ciScore     = (int) round($successRate * 50);
-            $score      += $ciScore;
+            $successRate   = $recentPipelines->where('status', 'success')->count() / $recentPipelines->count();
+            $ciScore       = (int) round($successRate * 50);
+            $score        += $ciScore;
             $details['ci'] = [
                 'score'        => $ciScore,
                 'max'          => 50,
@@ -46,7 +46,7 @@ class HealthScoreController extends Controller
         $lastRelease = $repository->releases()->latest('deployed_at')->first();
 
         if ($lastRelease && $lastRelease->deployed_at->diffInDays(now()) <= 7) {
-            $score        += 30;
+            $score            += 30;
             $details['deploy'] = [
                 'score'       => 30,
                 'max'         => 30,
@@ -61,10 +61,10 @@ class HealthScoreController extends Controller
         }
 
         // Zero incidentes abertos (20 pontos)
-        $openIncidents = $repository->incidents()->where('status', '!=', 'resolved')->count();
+        $openIncidents = $repository->incidents()->whereIn('status', ['open', 'investigating'])->count();
 
         if ($openIncidents === 0) {
-            $score        += 20;
+            $score               += 20;
             $details['incidents'] = ['score' => 20, 'max' => 20, 'open' => 0];
         } else {
             $details['incidents'] = ['score' => 0, 'max' => 20, 'open' => $openIncidents];

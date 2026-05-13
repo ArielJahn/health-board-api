@@ -8,20 +8,34 @@ use Illuminate\Http\Request;
 
 class IncidentController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Incident::with('repository')->latest('opened_at')->paginate(20));
+        $request->validate([
+            'status'   => 'sometimes|in:open,investigating,resolved',
+            'severity' => 'sometimes|in:low,medium,high,critical',
+        ]);
+
+        $paginator = Incident::with('repository')
+            ->when($request->status,   fn ($q, $v) => $q->where('status', $v))
+            ->when($request->severity, fn ($q, $v) => $q->where('severity', $v))
+            ->latest('opened_at')
+            ->paginate(20);
+
+        return $this->paginated($paginator);
     }
 
     public function show(Incident $incident): JsonResponse
     {
-        return response()->json($incident->load('repository'));
+        return $this->ok($incident->load('repository'));
     }
 
     public function open(): JsonResponse
     {
-        return response()->json(
-            Incident::with('repository')->where('status', '!=', 'resolved')->latest('opened_at')->get()
+        return $this->ok(
+            Incident::with('repository')
+                ->whereIn('status', ['open', 'investigating'])
+                ->latest('opened_at')
+                ->get()
         );
     }
 
@@ -37,7 +51,7 @@ class IncidentController extends Controller
             'resolved_at'   => 'nullable|date|after_or_equal:opened_at',
         ]);
 
-        return response()->json(Incident::create($data), 201);
+        return $this->created(Incident::create($data));
     }
 
     public function update(Request $request, Incident $incident): JsonResponse
@@ -56,13 +70,13 @@ class IncidentController extends Controller
 
         $incident->update($data);
 
-        return response()->json($incident);
+        return $this->ok($incident);
     }
 
     public function destroy(Incident $incident): JsonResponse
     {
         $incident->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }

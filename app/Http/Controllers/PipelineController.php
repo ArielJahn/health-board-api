@@ -9,19 +9,41 @@ use Illuminate\Http\Request;
 
 class PipelineController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Pipeline::with('repository')->latest('run_at')->paginate(20));
+        $request->validate([
+            'status' => 'sometimes|in:success,failure,cancelled,in_progress',
+        ]);
+
+        $paginator = Pipeline::with('repository')
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->latest('run_at')
+            ->paginate(20);
+
+        return $this->paginated($paginator);
     }
 
     public function show(Pipeline $pipeline): JsonResponse
     {
-        return response()->json($pipeline->load('repository'));
+        return $this->ok($pipeline->load('repository'));
     }
 
-    public function byRepository(Repository $repository): JsonResponse
+    public function byRepository(Request $request, Repository $repository): JsonResponse
     {
-        return response()->json($repository->pipelines()->latest('run_at')->get());
+        $request->validate([
+            'limit'  => 'sometimes|integer|min:1|max:100',
+            'status' => 'sometimes|in:success,failure,cancelled,in_progress',
+        ]);
+
+        $limit = (int) $request->query('limit', 20);
+
+        $pipelines = $repository->pipelines()
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->latest('run_at')
+            ->limit($limit)
+            ->get();
+
+        return $this->ok($pipelines);
     }
 
     public function store(Request $request): JsonResponse
@@ -35,13 +57,13 @@ class PipelineController extends Controller
             'run_at'        => 'required|date',
         ]);
 
-        return response()->json(Pipeline::create($data), 201);
+        return $this->created(Pipeline::create($data));
     }
 
     public function destroy(Pipeline $pipeline): JsonResponse
     {
         $pipeline->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }

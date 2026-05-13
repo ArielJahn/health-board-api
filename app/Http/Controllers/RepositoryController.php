@@ -10,12 +10,12 @@ class RepositoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Repository::paginate(20));
+        return $this->paginated(Repository::paginate(20));
     }
 
     public function show(Repository $repository): JsonResponse
     {
-        return response()->json($repository->load(['pipelines', 'releases', 'incidents']));
+        return $this->ok($repository->load(['pipelines', 'releases', 'incidents']));
     }
 
     public function store(Request $request): JsonResponse
@@ -27,7 +27,7 @@ class RepositoryController extends Controller
             'access_token' => 'nullable|string|max:255',
         ]);
 
-        return response()->json(Repository::create($data), 201);
+        return $this->created(Repository::create($data));
     }
 
     public function update(Request $request, Repository $repository): JsonResponse
@@ -41,13 +41,13 @@ class RepositoryController extends Controller
 
         $repository->update($data);
 
-        return response()->json($repository);
+        return $this->ok($repository);
     }
 
     public function destroy(Repository $repository): JsonResponse
     {
         $repository->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }
