@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/repositories/{repository}/releases', [ReleaseController::class, 'byRepository']);
 
     // Incidents
+    Route::get('/repositories/{repository}/incidents', [IncidentController::class, 'byRepository']);
     Route::get('/incidents', [IncidentController::class, 'index']);
     Route::get('/incidents/open', [IncidentController::class, 'open']);
     Route::get('/incidents/{incident}', [IncidentController::class, 'show']);

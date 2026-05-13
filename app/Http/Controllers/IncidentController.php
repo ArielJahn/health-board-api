@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Incident;
+use App\Models\Repository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -37,6 +38,26 @@ class IncidentController extends Controller
                 ->latest('opened_at')
                 ->get()
         );
+    }
+
+    public function byRepository(Request $request, Repository $repository): JsonResponse
+    {
+        $request->validate([
+            'status'   => 'sometimes|in:open,investigating,resolved',
+            'severity' => 'sometimes|in:low,medium,high,critical',
+            'limit'    => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $limit = (int) $request->query('limit', 20);
+
+        $incidents = $repository->incidents()
+            ->when($request->status,   fn ($q, $v) => $q->where('status', $v))
+            ->when($request->severity, fn ($q, $v) => $q->where('severity', $v))
+            ->latest('opened_at')
+            ->limit($limit)
+            ->get();
+
+        return $this->ok($incidents);
     }
 
     public function store(Request $request): JsonResponse
