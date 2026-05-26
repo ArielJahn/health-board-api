@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Route;
 // Webhook — sem autenticação (GitHub envia diretamente)
 Route::post('/webhooks/github', [WebhookController::class, 'github']);
 
+// Gerador de token local — apenas em ambiente local
+if (app()->environment('local')) {
+    Route::get('/dev/token', function () {
+        $user = \App\Models\User::first();
+        $token = $user->createToken('dashboard')->plainTextToken;
+        return response()->json(['token' => $token, 'user' => $user->email]);
+    });
+}
+
 // Rotas protegidas por API token (Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
 
